@@ -1,3 +1,5 @@
+package original;
+
 /*
  *
  * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
@@ -30,7 +32,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Checkbox;
@@ -39,14 +40,19 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.StringTokenizer;
+
+import javax.swing.JPanel;
+
+import start.PseudoApplet;
 
 class Node {
 
@@ -66,7 +72,7 @@ class Edge {
 }
 
 @SuppressWarnings("serial")
-class GraphPanel extends Panel implements Runnable {
+class GraphPanel extends JPanel implements Runnable {
 
 	Graph graph;
 	int nnodes;
@@ -132,6 +138,15 @@ class GraphPanel extends Panel implements Runnable {
 				e.consume();
 			}
 		});
+		/* added for PseudoApplet */
+		JPanel panel = this;
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				panel.repaint();
+			}
+		});
+
 	}
 
 	int findNode(String lbl) {
@@ -172,7 +187,7 @@ class GraphPanel extends Panel implements Runnable {
 					n.x += 100 * Math.random() - 50;
 					n.y += 100 * Math.random() - 50;
 				}
-				graph.play(graph.getCodeBase(), "audio/drip.au");
+				graph.play(graph.getCodeBase(), "audio/drip.mp3");
 			}
 			try {
 				Thread.sleep(100);
@@ -331,6 +346,15 @@ class GraphPanel extends Panel implements Runnable {
 	public void stop() {
 		relaxer = null;
 	}
+
+	/*
+	 * added for working with JPanel
+	 */
+	@Override
+	public void paint(Graphics g) {
+		super.paint(g);
+		update(g);
+	}
 }
 
 /**
@@ -338,10 +362,10 @@ class GraphPanel extends Panel implements Runnable {
  * @author Alexander Kouznetsov
  */
 @SuppressWarnings("serial")
-public class Graph extends Applet implements ActionListener, ItemListener {
+public class Graph extends PseudoApplet implements ActionListener, ItemListener {
 
 	GraphPanel panel;
-	Panel controlPanel;
+	JPanel controlPanel;
 	Button scramble = new Button("Scramble");
 	Button shake = new Button("Shake");
 	Checkbox stress = new Checkbox("Stress");
@@ -353,7 +377,7 @@ public class Graph extends Applet implements ActionListener, ItemListener {
 
 		panel = new GraphPanel(this);
 		add("Center", panel);
-		controlPanel = new Panel();
+		controlPanel = new JPanel();
 		add("South", controlPanel);
 
 		controlPanel.add(scramble);
@@ -411,7 +435,7 @@ public class Graph extends Applet implements ActionListener, ItemListener {
 		Object src = e.getSource();
 
 		if (src == scramble) {
-			play(getCodeBase(), "audio/computer.au");
+			play(getCodeBase(), "audio/computer.mp3");
 			Dimension d = getSize();
 			for (int i = 0; i < panel.nnodes; i++) {
 				Node n = panel.nodes[i];
@@ -424,7 +448,7 @@ public class Graph extends Applet implements ActionListener, ItemListener {
 		}
 
 		if (src == shake) {
-			play(getCodeBase(), "audio/gong.au");
+			play(getCodeBase(), "audio/gong.mp3");
 			getSize();
 			for (int i = 0; i < panel.nnodes; i++) {
 				Node n = panel.nodes[i];
@@ -468,5 +492,17 @@ public class Graph extends Applet implements ActionListener, ItemListener {
 								+ "the edge name by a forward slash." },
 				{ "center", "string", "The name of the center node." } };
 		return info;
+	}
+
+	/*
+	 * methods added for running it from a JFrame
+	 */
+	PseudoApplet graphLayout;
+
+	public Graph() {
+	}
+
+	public JPanel getGraphPanel() {
+		return panel;
 	}
 }
